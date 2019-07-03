@@ -52,7 +52,7 @@ def stepFlash(board, test)
 def stepTests(board, test)
 {
     def test_name = test.replaceAll('/', '_')
-    sh "set +e; make -C ${test} robot-test; set -e"
+    sh "make -C ${test} robot-test || true"
     archiveArtifacts artifacts: "build/robot/${board}/${test_name}/*.xml"
     junit "build/robot/${board}/${test_name}/xunit.xml"
 }
