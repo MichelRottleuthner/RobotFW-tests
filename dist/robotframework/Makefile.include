@@ -5,8 +5,6 @@ RFOUTPATH ?= $(BUILD_DIR)/robot/$(BOARD)/$(APPLICATION)/
 # search for RF test script files
 ROBOT_FILES ?= $(sort $(wildcard tests/*.robot))
 
-.PHONY: $(RFOUTPATH)/output.xml
-
 $(RFOUTPATH)/output.xml: $(ROBOT_FILES)
 	python3 -m robot.run \
 				--name "$(BOARD).$(APPLICATION)" \
@@ -26,5 +24,25 @@ $(RFOUTPATH)/output.xml: $(ROBOT_FILES)
 # RF make target
 robot-test: $(RFOUTPATH)/output.xml
 
+robot-rerun: $(RFOUTPATH)/output.xml $(ROBOT_FILES)
+	python3 -m robot.run \
+				--name "$(BOARD).$(APPLICATION)" \
+				--noncritical warn-if-failed \
+				--settag "APP_$(APPLICATION)" \
+				--settag "BOARD_$(BOARD)" \
+				--metadata RIOT-Version:$(RIOT_VERSION) \
+				--metadata RIOT-Board:$(BOARD) \
+				--metadata RIOT-Application:$(APPLICATION) \
+				-P "$(RFPYPATH)" \
+				-l NONE \
+				-o $@ \
+				-r NONE \
+				--xunit $(RFOUTPATH)/xunit.xml \
+				--rerunfailed $^
+
 robot-html:  $(RFOUTPATH)/output.xml
 	python3 -m robot.rebot -d $(RFOUTPATH) $<
+
+robot-clean:
+	@rm -f $(RFOUTPATH)/*.xml
+	@rm -f $(RFOUTPATH)/*.html
